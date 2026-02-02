@@ -1,0 +1,51 @@
+name: Cloudant Backup Automation
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '0 18 * * 5'   # Every Friday 6PM UTC
+
+jobs:
+  cloudant-backup:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Install required tools
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl awscli
+          pip3 install awscli
+
+      # Create .env dynamically
+      - name: Create Environment File
+        run: |
+          cat <<EOF > .env
+          COUCH_URL=${{ secrets.COUCH_URL }}
+          DATABASES="${{ secrets.DATABASES }}"
+          ENV=${{ secrets.ENV }}
+          UPLOAD_TO_S3=${{ secrets.UPLOAD_TO_S3 }}
+          S3_BUCKET=${{ secrets.S3_BUCKET }}
+          S3_ENDPOINT_URL=${{ secrets.S3_ENDPOINT_URL }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
+          EOF
+
+      - name: Give Execute Permission
+        run: chmod +x manage_cloudant.sh
+
+      - name: Run Cloudant Backup
+        run: ./manage_cloudant.sh
+
+      # Upload backup folder as artifact (optional but recommended)
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudant-backup
+          path: backup/
