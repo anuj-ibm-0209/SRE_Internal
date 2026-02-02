@@ -10,22 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Install awscli via pip (Required for IBM COS)
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq curl
+          sudo apt-get install -y jq curl python3-pip
+          pip3 install awscli
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-
+      # Create env file
       - name: Create Environment File
         run: |
           cat <<EOF > .env
@@ -35,6 +30,9 @@ jobs:
           UPLOAD_TO_S3=${{ secrets.UPLOAD_TO_S3 }}
           S3_BUCKET=${{ secrets.S3_BUCKET }}
           S3_ENDPOINT_URL=${{ secrets.S3_ENDPOINT_URL }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
           EOF
 
       - name: Give Execute Permission
@@ -42,3 +40,9 @@ jobs:
 
       - name: Run Backup Script
         run: ./manage_cloudant.sh
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudant-backup
+          path: backup/
