@@ -3,46 +3,83 @@ name: Cloudant Backup Automation
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 18 * * 5'
+    - cron: '0 18 * * 5'   # Every Friday 6 PM UTC (11:30 PM IST)
 
 jobs:
   cloudant-backup:
     runs-on: ubuntu-latest
 
     steps:
+      # ----------------------------------------
+      # Checkout Repository
+      # ----------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Install awscli via pip (Required for IBM COS)
+      # ----------------------------------------
+      # Install Dependencies
+      # ----------------------------------------
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq curl python3-pip
           pip3 install awscli
 
-      # Create env file
+      # ----------------------------------------
+      # Create .env File From GitHub Secrets
+      # ----------------------------------------
       - name: Create Environment File
         run: |
-          cat <<EOF > .env
-          COUCH_URL=${{ secrets.COUCH_URL }}
-          DATABASES="${{ secrets.DATABASES }}"
-          ENV=${{ secrets.ENV }}
-          UPLOAD_TO_S3=${{ secrets.UPLOAD_TO_S3 }}
-          S3_BUCKET=${{ secrets.S3_BUCKET }}
-          S3_ENDPOINT_URL=${{ secrets.S3_ENDPOINT_URL }}
-          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
-          EOF
+          echo "COUCH_URL=${{ secrets.COUCH_URL }}" > .env
+          echo "DATABASES=${{ secrets.DATABASES }}" >> .env
+          echo "ENV=${{ secrets.ENV }}" >> .env
+          echo "UPLOAD_TO_S3=${{ secrets.UPLOAD_TO_S3 }}" >> .env
+          echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> .env
+          echo "S3_ENDPOINT_URL=${{ secrets.S3_ENDPOINT_URL }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
 
+      # ----------------------------------------
+      # Verify .env Exists (Safe Debug)
+      # ----------------------------------------
+      - name: Verify Environment File
+        run: |
+          echo "Environment file created:"
+          cat .env | sed 's/=.*/=***/'
+
+      # ----------------------------------------
+      # Give Script Execute Permission
+      # ----------------------------------------
       - name: Give Execute Permission
         run: chmod +x manage_cloudant.sh
 
+      # ----------------------------------------
+      # Run Backup Script (Debug Enabled)
+      # ----------------------------------------
       - name: Run Backup Script
-        run: ./manage_cloudant.sh
+        run: |
+          set -x
+          ./manage_cloudant.sh
 
+      # ----------------------------------------
+      # Debug Backup Directory
+      # ----------------------------------------
+      - name: Debug Backup Output
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Project structure:"
+          ls -R
+          echo "Checking backup folder:"
+          ls -R backup || echo "Backup folder not found"
+
+      # ----------------------------------------
+      # Upload Backup Artifact
+      # ----------------------------------------
       - name: Upload Backup Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cloudant-backup
           path: backup/
+          if-no-files-found: warn
