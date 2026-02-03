@@ -31,7 +31,7 @@ jobs:
       - name: Create Environment File
         run: |
           echo "COUCH_URL=${{ secrets.COUCH_URL }}" > .env
-          echo "DATABASES=${{ secrets.DATABASES }}" >> .env
+          echo 'DATABASES="${{ secrets.DATABASES }}"' >> .env
           echo "ENV=${{ secrets.ENV }}" >> .env
           echo "UPLOAD_TO_S3=${{ secrets.UPLOAD_TO_S3 }}" >> .env
           echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> .env
