@@ -60,7 +60,7 @@ jobs:
       - name: Run Backup Script
         run: |
           set -x
-          ./manage_cloudant.sh
+          ./manage_cloudant.sh backup
 
       # ----------------------------------------
       # Debug Backup Directory
