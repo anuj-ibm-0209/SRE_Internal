@@ -83,3 +83,27 @@ jobs:
           name: cloudant-backup
           path: backup/
           if-no-files-found: warn
+
+      # -----------------------------
+      # Slack Notification - SUCCESS
+      # -----------------------------
+      - name: Slack Success Notification
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"Cloudant Backup SUCCESS\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\"
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # -----------------------------
+      # Slack Notification - FAILURE
+      # -----------------------------
+      - name: Slack Failure Notification
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"text\": \"Cloudant Backup FAILED\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\nCheck Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
