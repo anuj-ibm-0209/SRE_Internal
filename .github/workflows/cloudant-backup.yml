@@ -92,7 +92,7 @@ jobs:
         run: |
           curl -X POST -H 'Content-type: application/json' \
           --data "{
-            \"text\": \"Cloudant Backup SUCCESS\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\"
+            \"text\": \"Cloudant Backup Stage SUCCESS\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\"
           }" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -104,6 +104,6 @@ jobs:
         run: |
           curl -X POST -H 'Content-type: application/json' \
           --data "{
-            \"text\": \"Cloudant Backup FAILED\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\nCheck Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
+            \"text\": \"Cloudant Backup Stage FAILED\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\nCheck Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
           }" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
