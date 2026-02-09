@@ -2,32 +2,37 @@ name: Cloudant Backup Automation
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select Environment"
+        required: true
+        default: stage
+        type: choice
+        options:
+          - stage
+          - prod
+
   schedule:
-    - cron: '0 18 * * 5'   # Every Friday 6 PM UTC (11:30 PM IST)
+    - cron: '0 18 * * 5'   # Every Friday
 
 jobs:
   cloudant-backup:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'stage' }}
 
     steps:
-      # ----------------------------------------
-      # Checkout Repository
-      # ----------------------------------------
+      # Checkout Repo
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # ----------------------------------------
       # Install Dependencies
-      # ----------------------------------------
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq curl python3-pip
           pip3 install awscli
 
-      # ----------------------------------------
-      # Create .env File From GitHub Secrets
-      # ----------------------------------------
+      # Create ENV File
       - name: Create Environment File
         run: |
           echo "COUCH_URL=${{ secrets.COUCH_URL }}" > .env
@@ -40,70 +45,14 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
 
-      # ----------------------------------------
-      # Verify .env Exists (Safe Debug)
-      # ----------------------------------------
-      - name: Verify Environment File
-        run: |
-          echo "Environment file created:"
-          cat .env | sed 's/=.*/=***/'
-
-      # ----------------------------------------
-      # Give Script Execute Permission
-      # ----------------------------------------
-      - name: Give Execute Permission
-        run: chmod +x manage_cloudant.sh
-
-      # ----------------------------------------
-      # Run Backup Script (Debug Enabled)
-      # ----------------------------------------
+      # Run Backup
       - name: Run Backup Script
-        run: |
-          set -x
-          ./manage_cloudant.sh backup
+        run: ./manage_cloudant.sh backup
 
-      # ----------------------------------------
-      # Debug Backup Directory
-      # ----------------------------------------
-      - name: Debug Backup Output
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Project structure:"
-          ls -R
-          echo "Checking backup folder:"
-          ls -R backup || echo "Backup folder not found"
-
-      # ----------------------------------------
-      # Upload Backup Artifact
-      # ----------------------------------------
+      # Upload Artifact
       - name: Upload Backup Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cloudant-backup
+          name: cloudant-backup-${{ secrets.ENV }}
           path: backup/
           if-no-files-found: warn
-
-      # -----------------------------
-      # Slack Notification - SUCCESS
-      # -----------------------------
-      - name: Slack Success Notification
-        if: success()
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data "{
-            \"text\": \"Cloudant Backup Stage SUCCESS\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\"
-          }" \
-          ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      # -----------------------------
-      # Slack Notification - FAILURE
-      # -----------------------------
-      - name: Slack Failure Notification
-        if: failure()
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data "{
-            \"text\": \"Cloudant Backup Stage FAILED\nRepo: ${{ github.repository }}\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nBranch: ${{ github.ref_name }}\nCheck Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"
-          }" \
-          ${{ secrets.SLACK_WEBHOOK_URL }}
