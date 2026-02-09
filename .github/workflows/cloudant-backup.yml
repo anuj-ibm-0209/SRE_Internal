@@ -2,37 +2,31 @@ name: Cloudant Backup Automation
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Select Environment"
-        required: true
-        default: stage
-        type: choice
-        options:
-          - stage
-          - prod
 
   schedule:
-    - cron: '0 18 * * 5'   # Every Friday
+    - cron: '0 18 * * 5'    # Stage - Friday 18:00 UTC
+    - cron: '15 18 * * 5'   # Prod  - Friday 18:15 UTC
 
 jobs:
-  cloudant-backup:
+
+# ======================
+# Stage Backup Job
+# ======================
+  backup-stage:
+    if: github.event.schedule == '0 18 * * 5'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'stage' }}
+    environment: stage
 
     steps:
-      # Checkout Repo
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Install Dependencies
       - name: Install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y jq curl python3-pip
           pip3 install awscli
 
-      # Create ENV File
       - name: Create Environment File
         run: |
           echo "COUCH_URL=${{ secrets.COUCH_URL }}" > .env
@@ -45,14 +39,39 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
 
-      # Run Backup
       - name: Run Backup Script
         run: ./manage_cloudant.sh backup
 
-      # Upload Artifact
-      - name: Upload Backup Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cloudant-backup-${{ secrets.ENV }}
-          path: backup/
-          if-no-files-found: warn
+
+# ======================
+# Prod Backup Job
+# ======================
+  backup-prod:
+    if: github.event.schedule == '15 18 * * 5'
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl python3-pip
+          pip3 install awscli
+
+      - name: Create Environment File
+        run: |
+          echo "COUCH_URL=${{ secrets.COUCH_URL }}" > .env
+          echo 'DATABASES="${{ secrets.DATABASES }}"' >> .env
+          echo "ENV=${{ secrets.ENV }}" >> .env
+          echo "UPLOAD_TO_S3=${{ secrets.UPLOAD_TO_S3 }}" >> .env
+          echo "S3_BUCKET=${{ secrets.S3_BUCKET }}" >> .env
+          echo "S3_ENDPOINT_URL=${{ secrets.S3_ENDPOINT_URL }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
+
+      - name: Run Backup Script
+        run: ./manage_cloudant.sh backup
