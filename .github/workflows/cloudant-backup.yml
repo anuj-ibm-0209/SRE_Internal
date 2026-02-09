@@ -48,12 +48,27 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
-          
+
       - name: Give Execute Permission
         run: chmod +x manage_cloudant.sh
 
       - name: Run Backup Script
         run: ./manage_cloudant.sh backup
+
+      # Slack Alert
+      - name: Slack Notification
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            MSG=":white_check_mark: Cloudant Backup ${{ secrets.ENV }} SUCCESS"
+          else
+            MSG=":x: Cloudant Backup ${{ secrets.ENV }} FAILED"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\": \"$MSG\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
 
 # ======================
@@ -92,3 +107,18 @@ jobs:
 
       - name: Run Backup Script
         run: ./manage_cloudant.sh backup
+
+      # Slack Alert
+      - name: Slack Notification
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            MSG=":white_check_mark: Cloudant Backup ${{ secrets.ENV }} SUCCESS"
+          else
+            MSG=":x: Cloudant Backup ${{ secrets.ENV }} FAILED"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\": \"$MSG\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
