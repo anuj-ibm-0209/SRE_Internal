@@ -2,10 +2,19 @@ name: Cloudant Backup Automation
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select Environment"
+        required: true
+        default: stage
+        type: choice
+        options:
+          - stage
+          - prod
 
   schedule:
-    - cron: '0 18 * * 5'    # Stage - Friday 18:00 UTC
-    - cron: '15 18 * * 5'   # Prod  - Friday 18:15 UTC
+    - cron: '0 18 * * 5'
+    - cron: '15 18 * * 5'
 
 jobs:
 
@@ -13,13 +22,14 @@ jobs:
 # Stage Backup Job
 # ======================
   backup-stage:
-    if: github.event.schedule == '0 18 * * 5'
+    if: |
+      github.event.schedule == '0 18 * * 5' ||
+      github.event.inputs.environment == 'stage'
     runs-on: ubuntu-latest
     environment: stage
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
@@ -47,13 +57,14 @@ jobs:
 # Prod Backup Job
 # ======================
   backup-prod:
-    if: github.event.schedule == '15 18 * * 5'
+    if: |
+      github.event.schedule == '15 18 * * 5' ||
+      github.event.inputs.environment == 'prod'
     runs-on: ubuntu-latest
     environment: prod
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
         run: |
