@@ -61,9 +61,9 @@ jobs:
         run: |
           STATUS="${{ job.status }}"
           if [ "$STATUS" = "success" ]; then
-            MSG=":white_check_mark: Cloudant Backup ${{ secrets.ENV }} SUCCESS"
+            MSG="Cloudant Backup ${{ secrets.ENV }} SUCCESS"
           else
-            MSG=":x: Cloudant Backup ${{ secrets.ENV }} FAILED"
+            MSG="Cloudant Backup ${{ secrets.ENV }} FAILED"
           fi
 
           curl -X POST -H 'Content-type: application/json' \
@@ -114,9 +114,9 @@ jobs:
         run: |
           STATUS="${{ job.status }}"
           if [ "$STATUS" = "success" ]; then
-            MSG=":white_check_mark: Cloudant Backup ${{ secrets.ENV }} SUCCESS"
+            MSG="Cloudant Backup ${{ secrets.ENV }} SUCCESS"
           else
-            MSG=":x: Cloudant Backup ${{ secrets.ENV }} FAILED"
+            MSG="Cloudant Backup ${{ secrets.ENV }} FAILED"
           fi
 
           curl -X POST -H 'Content-type: application/json' \
