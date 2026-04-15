@@ -6,15 +6,8 @@
 # Exit on error, treat unset variables as errors, and fail on pipe errors.
 set -euo pipefail
 
-# Enable exporting of all variables
-set -o allexport
-# Load environment variables from .env file
-if [ -f .env ]; then
-    source .env
-else
-    echo "Error: .env file not found."
-    exit 1
-fi
+# In Code Engine, env vars are injected at runtime
+echo "[INFO] Using environment variables from runtime"
 
 # --- CONFIGURATION ---
 # It is highly recommended to use a separate, git-ignored file (e.g., .env)
@@ -41,7 +34,7 @@ LOCAL_BACKUP_ROOT="${LOCAL_BACKUP_ROOT:-backup}"
 # --- S3 UPLOAD CONFIGURATION ---
 # Set to "true" to enable S3 upload.
 UPLOAD_TO_S3="${UPLOAD_TO_S3:-false}"
-S3_BUCKET="${S3_BUCKET:-gha-cloudant-db-backup}"
+S3_BUCKET="${S3_BUCKET:gha-cloudant-db-backup}"
 S3_ENDPOINT_URL="${S3_ENDPOINT_URL:-http://s3.us-east.cloud-object-storage.appdomain.cloud}"
 
 # ==============================================================================
@@ -207,7 +200,7 @@ EOF
 
 main() {
     # Default to 'help' if no command is provided.
-    local command="${1:-help}"
+    local command="${1:-backup}"
 
     case "${command}" in
         backup)
@@ -226,5 +219,10 @@ main() {
     esac
 }
 
-# Run the main function with all script arguments.
+# --- NON-INTERACTIVE INPUT HANDLING (ADDED FOR CODE ENGINE) ---
+if [[ "${1:-}" == "restore" ]]; then
+    : "${BACKUP_DIR:?ERROR: BACKUP_DIR environment variable is not set.}"
+    exec < <(echo "$BACKUP_DIR")
+fi
+
 main "$@"
