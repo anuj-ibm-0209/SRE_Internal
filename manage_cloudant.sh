@@ -5,19 +5,16 @@
 
 # Exit on error, treat unset variables as errors, and fail on pipe errors.
 set -euo pipefail
-set -x
 
-echo "===== SCRIPT STARTED ====="
-date
-
-echo "Checking required variables..."
-: "${COUCH_URL:?ERROR: COUCH_URL not set}"
-
-echo "COUCH_URL is present"
-
-echo "Starting main logic..."
-# In Code Engine, env vars are injected at runtime
-echo "[INFO] Using environment variables from runtime"
+# Enable exporting of all variables
+set -o allexport
+# Load environment variables from .env file
+if [ -f .env ]; then
+    source .env
+else
+    echo "Error: .env file not found."
+    exit 1
+fi
 
 # --- CONFIGURATION ---
 # It is highly recommended to use a separate, git-ignored file (e.g., .env)
