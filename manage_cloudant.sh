@@ -226,10 +226,5 @@ main() {
     esac
 }
 
-# --- NON-INTERACTIVE INPUT HANDLING (ADDED FOR CODE ENGINE) ---
-if [[ "${1:-}" == "restore" ]]; then
-    : "${BACKUP_DIR:?ERROR: BACKUP_DIR environment variable is not set.}"
-    exec < <(echo "$BACKUP_DIR")
-fi
-
+# Run the main function with all script arguments.
 main "$@"
