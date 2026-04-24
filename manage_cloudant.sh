@@ -41,7 +41,7 @@ LOCAL_BACKUP_ROOT="${LOCAL_BACKUP_ROOT:-backup}"
 # --- S3 UPLOAD CONFIGURATION ---
 # Set to "true" to enable S3 upload.
 UPLOAD_TO_S3="${UPLOAD_TO_S3:-false}"
-S3_BUCKET="${S3_BUCKET:gha-cloudant-db-backup}"
+S3_BUCKET="${S3_BUCKET:-gha-cloudant-db-backup}"
 S3_ENDPOINT_URL="${S3_ENDPOINT_URL:-http://s3.us-east.cloud-object-storage.appdomain.cloud}"
 
 # ==============================================================================
