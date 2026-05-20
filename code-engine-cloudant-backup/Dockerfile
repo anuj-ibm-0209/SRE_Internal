@@ -8,7 +8,7 @@ RUN apk add --no-cache \
     curl \
     python3 \
     py3-pip \
-    && pip3 install --no-cache-dir awscli
+    && pip3 install --no-cache-dir --break-system-packages awscli
 
 # Install @cloudant/couchbackup globally
 RUN npm install -g @cloudant/couchbackup
