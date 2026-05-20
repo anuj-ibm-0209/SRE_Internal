@@ -13,13 +13,10 @@ RUN apk add --no-cache \
 # Install @cloudant/couchbackup globally
 RUN npm install -g @cloudant/couchbackup
 
-# Create a non-root user for security
-RUN addgroup -g 1000 cloudant && \
-    adduser -D -u 1000 -G cloudant cloudant
-
 # Create backup directory and set permissions
+# Use existing node user (uid/gid 1000) instead of creating new user
 RUN mkdir -p /app/backup && \
-    chown -R cloudant:cloudant /app
+    chown -R node:node /app
 
 # Set working directory
 WORKDIR /app
@@ -29,10 +26,10 @@ COPY manage_cloudant.sh /app/manage_cloudant.sh
 
 # Make script executable
 RUN chmod +x /app/manage_cloudant.sh && \
-    chown cloudant:cloudant /app/manage_cloudant.sh
+    chown node:node /app/manage_cloudant.sh
 
-# Switch to non-root user
-USER cloudant
+# Switch to non-root user (use existing node user)
+USER node
 
 # Set default command (can be overridden in Code Engine job definition)
 CMD ["/app/manage_cloudant.sh", "backup"]
