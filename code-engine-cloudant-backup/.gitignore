@@ -1,0 +1,29 @@
+# Ignore actual credentials and sensitive files
+.env
+secrets-custom.yaml
+*-credentials.yaml
+
+# Ignore backup directories
+backup/
+*.log
+
+# Ignore local test files
+test-*.sh
+local-test/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Ignore build artifacts
+*.tar
+*.tar.gz
+
+# Made with Bob

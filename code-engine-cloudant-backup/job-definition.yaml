@@ -1,0 +1,123 @@
+apiVersion: codeengine.cloud.ibm.com/v1beta1
+kind: JobDefinition
+metadata:
+  name: cloudant-backup-job
+  labels:
+    app: cloudant-backup
+    environment: prod
+spec:
+  # Container image - replace with your actual image registry path
+  # Example: us.icr.io/your-namespace/cloudant-backup:latest
+  imageReference: YOUR_REGISTRY/cloudant-backup:latest
+  
+  # Image pull policy
+  imagePullPolicy: Always
+  
+  # Resource allocation
+  resources:
+    requests:
+      cpu: "0.5"
+      memory: "1Gi"
+      ephemeralStorage: "2Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+      ephemeralStorage: "4Gi"
+  
+  # Job execution settings
+  maxExecutionTime: 3600  # 1 hour timeout
+  retryLimit: 2           # Retry failed jobs twice
+  
+  # Environment variables from ConfigMap (non-sensitive)
+  envFrom:
+    - configMapRef:
+        name: cloudant-backup-config
+        optional: false
+  
+  # Environment variables from Secret (sensitive data)
+  env:
+    - name: COUCH_URL
+      valueFrom:
+        secretKeyRef:
+          name: cloudant-credentials
+          key: couch-url
+    
+    # Optional: AWS credentials for S3 upload
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: aws-credentials
+          key: access-key-id
+          optional: true
+    
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: aws-credentials
+          key: secret-access-key
+          optional: true
+  
+  # Command to run (optional - defaults to CMD in Dockerfile)
+  # Uncomment to override:
+  # command: ["/app/manage_cloudant.sh"]
+  # args: ["backup"]
+  
+  # Service account (optional)
+  # serviceAccountName: cloudant-backup-sa
+  
+  # Volume mounts (if needed for persistent storage)
+  # volumeMounts:
+  #   - name: backup-storage
+  #     mountPath: /app/backup
+  
+  # volumes:
+  #   - name: backup-storage
+  #     persistentVolumeClaim:
+  #       claimName: cloudant-backup-pvc
+
+---
+# ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudant-backup-config
+data:
+  # Environment name
+  ENV: "prod"
+  
+  # Databases to backup (space-separated)
+  DATABASES: "github_actions_jobs github_app_repos_allowlist github_app_users"
+  
+  # Local backup directory
+  LOCAL_BACKUP_ROOT: "backup"
+  
+  # S3 upload configuration
+  UPLOAD_TO_S3: "true"
+  S3_BUCKET: "gha-cloudant-db-backup"
+  S3_ENDPOINT_URL: "http://s3.us-east.cloud-object-storage.appdomain.cloud"
+
+---
+# Secret for Cloudant credentials (create this separately with actual values)
+# DO NOT commit actual credentials to version control
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudant-credentials
+type: Opaque
+stringData:
+  # Replace with your actual Cloudant URL
+  couch-url: "https://username:password@account.cloudant.com"
+
+---
+# Secret for AWS credentials (optional - only if using S3 upload)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-credentials
+type: Opaque
+stringData:
+  # Replace with your actual AWS credentials
+  access-key-id: "YOUR_AWS_ACCESS_KEY_ID"
+  secret-access-key: "YOUR_AWS_SECRET_ACCESS_KEY"
+
+# Made with Bob
