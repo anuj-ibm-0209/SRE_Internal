@@ -8,10 +8,14 @@ metadata:
 spec:
   # Container image - replace with your actual image registry path
   # Example: us.icr.io/your-namespace/cloudant-backup:latest
-  imageReference: YOUR_REGISTRY/cloudant-backup:latest
+  imageReference: icr.io/icr-githubactions-prod/cloudant-backup:latest
   
   # Image pull policy
   imagePullPolicy: Always
+  
+  # Image pull secrets for private registry authentication
+  imagePullSecrets:
+    - name: anup-icr-creds
   
   # Resource allocation
   resources:
