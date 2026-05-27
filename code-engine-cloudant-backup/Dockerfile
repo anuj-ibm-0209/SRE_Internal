@@ -10,8 +10,8 @@ RUN apk add --no-cache \
     py3-pip \
     && pip3 install --no-cache-dir --break-system-packages awscli
 
-# Install @cloudant/couchbackup globally
-RUN npm install -g @cloudant/couchbackup
+# Install @cloudant/couchbackup globally (pinned to stable version)
+RUN npm install -g @cloudant/couchbackup@2.9.15
 
 # Create backup directory and set permissions
 # Use existing node user (uid/gid 1000) instead of creating new user
