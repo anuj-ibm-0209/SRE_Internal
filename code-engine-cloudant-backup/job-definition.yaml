@@ -15,7 +15,7 @@ spec:
   
   # Image pull secrets for private registry authentication
   imagePullSecrets:
-    - name: anup-icr-creds
+    - name: docker-secs
   
   # Resource allocation
   resources:
